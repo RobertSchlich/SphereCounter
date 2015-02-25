@@ -1,0 +1,4 @@
+[Project]
+Name=SphereCounter
+Manager=KDevCMakeManager
+VersionControl=kdevgit
