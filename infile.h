@@ -1,9 +1,9 @@
-#ifndef INFILEREAD_H
-#define INFILEREAD_H
+#ifndef INFILE_H
+#define INFILE_H
 #include "sphere.h"
 #include "layer.h"
 
-class InFileReader {
+class InFile {
 private:
 	int numberofspheres;
 	int numberoflayers;

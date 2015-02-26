@@ -4,7 +4,7 @@
 
 class Sphere {
 private:
-	static const double PI = 3.14159265358979323846; 
+	static constexpr double PI = 3.14159265358979323846; 
 	int m_id;
 	double m_x;
 	double m_y;
