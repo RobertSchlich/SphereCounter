@@ -1,0 +1,4 @@
+# SphereCounter
+
+MADNESS?
+THIS IS SPHERECOUNTER!!!!
