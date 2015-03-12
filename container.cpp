@@ -2,13 +2,16 @@
 
 #include <iostream>
 #include <algorithm>
-#include <iomanip>		//IO Manipulation
-#include <fstream>		//Reading/Writing in Files
+#include <iomanip>
+// IO Manipulation
+#include <fstream>
+// Reading/Writing to/from Files
 
 #include "auxfunc.h"
 
+Container::Container() 
 // Standard constructor
-Container::Container() {
+{
 	m_xTop = 0;
 	m_xBottom = 0;
 	m_yTop = 0;
@@ -17,9 +20,10 @@ Container::Container() {
 	m_zBottom = 0;
 }
 
-// Constructor
 Container::Container(double x1, double x2, double y1, double y2, 
-					 double z1, double z2) {
+					 double z1, double z2) 
+// Constructor
+{
 	if (x1 > x2) {
 		m_xTop = x1;
 		m_xBottom = x2;
@@ -42,14 +46,15 @@ Container::Container(double x1, double x2, double y1, double y2,
 		m_zBottom = z1;
 	}
 	
-	std::cout << "Created a new container." << std::endl
+	std::cout << "Read box-boundaries from inputfile:" << std::endl
 		<< "  x: " << m_xBottom << "-" << m_xTop << std::endl
 		<< "  y: " << m_yBottom << "-" << m_yTop << std::endl
-		<< "  z: " << m_zBottom << "-" << m_zTop << std::endl;
+		<< "  z: " << m_zBottom << "-" << m_zTop << std::endl << std::endl;
 }
 
+void Container::addSphere(Sphere newsphere) 
 // A method to add a sphere to the sphere vector
-void Container::addSphere(Sphere newsphere) {
+{
 	spheres.push_back(newsphere);
 	// Check if the radius of the sphere is already registered in 
 	// the uniqueradii vector
@@ -78,13 +83,15 @@ void Container::addSphere(Sphere newsphere) {
 	
 }
 
+void Container::addLayer(Layer newlayer)
 // A method to add a layer to the layer vector
-void Container::addLayer(Layer newlayer){
+{
 	layers.push_back(newlayer);
 }
 
+double Container::getTop(char direction)
 // A method to get the top boundary of the experiment for the desired direciton
-double Container::getTop(char direction){
+{
 	if (direction = 'x')
 		return m_xTop;
 	else if (direction = 'y')
@@ -97,9 +104,10 @@ double Container::getTop(char direction){
 			<< "Valid diretions are 'x','y', or 'z'!";
 }
 
+double Container::getBottom(char direction)
 // A method to get the bottom boundary of the experiment for the desired 
 // direction
-double Container::getBottom(char direction){
+{
 	if (direction = 'x')
 		return m_xBottom;
 	else if (direction = 'y')
@@ -112,93 +120,128 @@ double Container::getBottom(char direction){
 			<< "Valid diretions are 'x','y', or 'z'!";
 }
 
-void Container::writeOutputFile(char* outfiledirectory) {
-	/* -----------------------------------------------------------------
-	   Layer-wise counting of the spheres
-	----------------------------------------------------------------- */
-	
-	double layerinfoarray [uniqueRadii.size()] [layers.size()];
-	double sphereinfoarray [spheres.size()] [layers.size()+2];
-	
-	for(int m = 0; m < spheres.size(); m++) {
-		
-		sphereinfoarray[m][0]=spheres[m].getVolume();
-		double rowsumofspheres = 0;
-		
-		for(int n = 0; n < layers.size(); n++) {
-				
-			double percentinlayer = spheres[m].percentinlayer(layers[n]);
-			int radiusposition = whereIsUniqueRadius( spheres[m].getRadius());
-			layerinfoarray[radiusposition][n] += percentinlayer;
-			sphereinfoarray[m][n+1] = percentinlayer;
-			rowsumofspheres += percentinlayer;
-			
-		}
-		
-		sphereinfoarray[m][layers.size()+1] = rowsumofspheres;
-		
+void Container::createInfoVectors()
+// A method that should create the info arrays inside each sphere and each layer
+// contained in the container.
+// This is where the magic happens! :)
+{
+	int numberOfUniqueRadii = uniqueRadii.size();
+	//First initialize the SphereVector inside of every layer
+	for(int l = 0; l < layers.size(); ++l) 
+	{
+		layers[l].initSphereVector(numberOfUniqueRadii);
 	}
+	
+	// Iterate through all spheres with Integer 'm'
+	for(int m = 0; m < spheres.size(); ++m) 
+	{
+		
+		// Iterate through all layers with Integer 'n'
+		for(int n = 0; n < layers.size(); ++n) 
+		{
+			
+			// Check what percentage of the current sphere(m) is in the current 
+			// layer (n)
+			double percentinlayer = spheres[m].percentinlayer(layers[n]);
+			// Find the position of the radius of the sphere inside the
+			// uniqueRadii vector
+			int radiusPosition = whereIsUniqueRadius( spheres[m].getRadius());
+			
+			spheres[m].setPercentInLayer(percentinlayer);
+			layers[n].addSphere(percentinlayer, radiusPosition);
+		}
+	}
+}
+
+void Container::writeOutputFile(char* outfiledirectory) 
+{
+	// Variables for output formating
 	std::cout.setf(std::ios::right);
 	int width = 16;
 	
-	/* -----------------------------------------------------------------
-	   Writing the output file
-	----------------------------------------------------------------- */
-
 	std::ofstream outfile(outfiledirectory);
 	outfile.precision(10);
 	
 	outfile << "Spheres were counted in the " << layers[0].getDirection() 
 		<< "-direction." << std::endl << std::endl;
 	
-	//Write a describtion of the layers to the outputfile
-	for (int i = 0; i < layers.size(); i++) {
+	// Write a describtion of the layers to the outputfile
+	for (int i = 0; i < layers.size(); i++) 
+	{
 		outfile << "Layer #" << i+1 << ":" << std::endl;
 		outfile << "\tBottom border:\t" << layers[i].getBottom() << std::endl;
 		outfile << "\tTop border:\t\t" << layers[i].getTop() << std::endl;
 	}
 	outfile << std::endl;
 	
-	//Write the layerinfoarray
-	outfile << "Layerinfoarray:" << std::endl;
-	outfile << "---------------" << std::endl;
+	
+	/* -------------------------------------------------------------------------
+		For every layer , write how many spheres of each radius are inside
+	--------------------------------------------------------------------------*/
+	
+	outfile << "Information about the layers:" << std::endl;
+	outfile << "-----------------------------" << std::endl;
 	outfile << std::setw(8) << "Radius";
+	// Write the header of the Table
 	for (int i = 0; i < layers.size(); i++) 
 	{
-		outfile << std::setw(width-1) << "#K in Schicht" << i+1;
+		outfile << std::setw(width-1) << "# in layer " << i+1;
 	}
+	outfile << std::setw(width-1) << "Total ";
 	outfile << std::endl;
-	outfile << std::setw(8+(layers.size())*width) << std::setfill('-') << "--" 
+	// Draw a line with '-'
+	outfile << std::setw(8+(layers.size()+1)*width) << std::setfill('-') << "--" 
 			<< std::endl << std::setfill(' ');
+
+	// Write to file the number of Spheres inside each layer sorted by
+	// unique radius of the spheres
 	for (int i = 0;  i < uniqueRadii.size(); i++) 
 	{
-		outfile << std::setw(8) <<uniqueRadii[i];
+		double totalNumber = 0;
+		outfile << std::setw(8) << uniqueRadii[i];
 		for (int j = 0; j < layers.size(); j++) 
 		{
-			outfile << std::setw(width) << layerinfoarray[i][j];
+			outfile << std::setw(width) << layers[j].getNumberOfSpheres(i);
+			totalNumber += layers[j].getNumberOfSpheres(i);
 		}
+		outfile << std::setw(width) << totalNumber;
 		outfile << std::endl;
 	}
 	outfile << std::endl << std::endl;
 	
-	//Write the sphereinfoarray
-	outfile << "Sphereinfoarray: " << std::endl;
-	outfile << "----------------" << std::endl;
+	
+	/* -------------------------------------------------------------------------
+		For every sphere, write to what percentage they are in which layer
+	--------------------------------------------------------------------------*/
+	
+	outfile << "Information about the spheres:" << std::endl;
+	outfile << "------------------------------" << std::endl;
+	// Write the header of the table
 	outfile << std::setw(6) << "Nr:";
-	outfile << setiosflags(std::ios::fixed) << std::setw(width+1) << "Volumen:";
+	outfile << std::setiosflags(std::ios::fixed) << std::setw(width+1) 
+			<< "Volume:";
 	for (int i = 0; i< layers.size(); i++) {
-		outfile << std::setw(width-2) << "% Schicht " << i+1 << ":";
+		outfile << std::setw(width-2) << "% in layer " << i+1 << ":";
 	}
-	outfile << setiosflags(std::ios::fixed) << std::setw(width) << "Prüfsumme:";
+	outfile << std::setiosflags(std::ios::fixed) << std::setw(width) 
+			<< "Checksum:";
 	outfile << std::endl;
+	// Draw a line of '-'
 	outfile << std::setw(6+(layers.size()+2)*width) << std::setfill('-') << "--" 
 			<< std::endl << std::setfill(' ');
+	// Start writing information for each sphere
 	for (int i = 0; i < spheres.size(); i++) {
-		outfile << setiosflags(std::ios::fixed) << std::setw(6) <<spheres[i].getID();
-		for (int j = 0; j < layers.size() + 2 ; j++) {
-			outfile << setiosflags(std::ios::fixed) << std::setw(width) 
-					<< sphereinfoarray[i][j];
+		// Write id and volume of sphere [i]
+		outfile << std::setiosflags(std::ios::fixed) 
+				<< std::setw(6) << spheres[i].getID() 
+				<< std::setw(width) << spheres[i].getVolume();
+		for (int j = 0; j < layers.size(); j++) {
+			// Write what percentage of sphere[i] is inside layer [j]
+			outfile << std::setiosflags(std::ios::fixed) << std::setw(width) 
+					<< spheres[i].getPercentInLayer(j);
 		}
+		// Write the checksum to the outfile
+		outfile << std::setw(width) << spheres[i].getChecksum();
 		outfile << std::endl;
 		outfile.flush();
 	}
@@ -206,7 +249,8 @@ void Container::writeOutputFile(char* outfiledirectory) {
 	outfile.close();
 }
 
-int Container::whereIsUniqueRadius(double searchedRadius) {
+int Container::whereIsUniqueRadius(double searchedRadius) 
+{
 	for (int i =  0;  i < uniqueRadii.size(); ++i) {
 		if (searchedRadius == uniqueRadii[i]) {
 			return i;
@@ -214,4 +258,5 @@ int Container::whereIsUniqueRadius(double searchedRadius) {
 		}	
 	}
 }
+
 

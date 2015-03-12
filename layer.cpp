@@ -1,15 +1,17 @@
 #include "layer.h"
 #include <iostream>
 
-Layer::Layer () {
-	// Default constructor
+Layer::Layer () 
+// Default constructor
+{
 	topborder = 0.1; 
 	bottomborder = 0.0; 
 	direction = 'z';
 }
 
-Layer::Layer(double border1, double border2, char direc) {
-	// Constructor
+Layer::Layer(double border1, double border2, char direc) 
+// Constructor
+{
 	if (direc == 'x' || direc == 'y' || direc == 'z')
 		direction = direc;
 	else
@@ -26,16 +28,48 @@ Layer::Layer(double border1, double border2, char direc) {
 	}
 	direction = direc;
 }
+void tryToModifyArray( const int b[], int x )
+{
+}
 
-double Layer::getTop() {
+double Layer::getTop() 
+{
 	return topborder;
 }
 
-double Layer::getBottom() {
+double Layer::getBottom() 
+{
 	return bottomborder;
 }
 
-void Layer::setBorders(double border1, double border2) {
+void Layer::initSphereVector(int numberOfUniqueRadii)
+// This method initializes the numberOfSpheresInside vector, so that it has
+// one entry for every sphere radius that appears in the experiment.
+{
+	numberOfSpheresInside.reserve(numberOfUniqueRadii);
+	for (int i=0; i< numberOfUniqueRadii; ++i)
+	{
+		numberOfSpheresInside[i]=0;
+	}
+}
+
+void Layer::addSphere(double percentInLayer, int positionOfThisRadius) 
+// This method adds the percentage of one sphere to the numberOfSpheresInside
+// vector. The percentage is added at the position given by positionOfThisRadius
+{
+	// Add the percentage of the currently considered sphere at the accoring
+	// position
+	numberOfSpheresInside[positionOfThisRadius] += percentInLayer;
+}
+
+double Layer::getNumberOfSpheres(int radiusPosition) 
+// Returns the number of spheres with the radius at radiusPosition
+{
+	return numberOfSpheresInside[radiusPosition];
+}
+
+void Layer::setBorders(double border1, double border2) 
+{
 	if (border1 > border2) {
 		topborder = border1;
 		bottomborder = border2;
@@ -45,6 +79,7 @@ void Layer::setBorders(double border1, double border2) {
 	}
 }
 
-char Layer::getDirection(){
+char Layer::getDirection()
+{
 	return direction;
 }

@@ -21,31 +21,36 @@
    As of: 11.12.2014
    ------------------------------------------------------------------ */
 // Includes of standard library headers
-#include <iostream>		//Input- Output Stream
-#include <iomanip>		//IO Manipulation
-#include <fstream>		//Reading/Writing in Files
-#include <string>		//Strings
-#include <sstream>		//Stringsstream; necessary for processing of Layerlist
-#include <cstdlib>		
-#include <cmath>		//
-#include <algorithm>	//z.B. für sort etc.
-#include <unistd.h> 	//für getopt
-#include <cerrno>		//Für Fehlerkontrolle bei strtod
+#include <iostream>
+// Input- Output Stream
+#include <iomanip>
+// IO Manipulation
+#include <fstream>
+// Reading/Writing in Files
+#include <string>
+// Strings
+#include <sstream>
+// Stringsstream; necessary for processing of Layerlist
+#include <cstdlib>
+#include <cmath>
+#include <algorithm>
+// z.B. für sort etc.
+#include <unistd.h>
+// für getopt
+#include <cerrno>
+// Für Fehlerkontrolle bei strtod
 
-// Includes of custom classes
 #include "sphere.h"
 #include "layer.h"
-#include "auxfunc.h"	//Auxilliary functions
+#include "auxfunc.h"	
+// Auxilliary functions
 #include "container.h"
+// Includes of custom classes
 
 using namespace std;
 
-/* ---------------------------------------------------------------------
-   Main function
---------------------------------------------------------------------- */
-
-int main(int argc, char* argv[]) {
-	
+int main(int argc, char* argv[]) 
+{
 	
 	/* -----------------------------------------------------------------
 	   Processing of the command line arguments
@@ -59,15 +64,19 @@ int main(int argc, char* argv[]) {
 	
 	cout << endl;
 	
-	while ((opt = getopt(argc, argv, "u:a:d:")) != -1) {
-		switch(opt) {
+	while ((opt = getopt(argc, argv, "u:a:d:")) != -1) 
+	{
+		switch(opt) 
+		{
 			case 'a':		// [a]utomatc layer generation
 				// Check for mutually exclusive option -u
-				if (uflag == 1) {
+				if (uflag == 1) 
+				{
 					cerr << "Options -a and -l  are mutually exclusive!";
 					exit (0);
 				}
-				else {
+				else 
+				{
 					cout << "Automatic layer definition was requested." << endl;
 					aflag = 1;
 					// Convert the argument to an int
@@ -82,13 +91,15 @@ int main(int argc, char* argv[]) {
 							<< endl << endl;
 				}
 				break;
-			case 'u':		//[u]ser-given layer generation
+			case 'u':		// [u]ser-given layer generation
 				// Check for mutually exclusive option -a
-				if (aflag == 1) {
+				if (aflag == 1) 
+				{
 					cerr << "Options -a and -l  are mutually exclusive!";
 					exit (0);
 				}
-				else  {
+				else  
+				{
 					cout << "User defined layer definition was requested:" 
 					<<endl << "The given defintion is: "
 					<< "'" << optarg << "'" << endl << endl;
@@ -97,41 +108,22 @@ int main(int argc, char* argv[]) {
 					uarg = optarg;
 				}
 				break;
-			case 'd':				//[Direction] specified by user
-				if (optarg[0] == 'x' || 
-					optarg[0] == 'y' || 
-					optarg[0] == 'z') {
+			case 'd':				// [Direction] specified by user
+				if (optarg[0] == 'x' || optarg[0] == 'y' || optarg[0] == 'z') 
+				{
 					direction = optarg[0];
 				}
 				else
-					cerr << "Only 'x', 'y', and 'z'" 
-						<< " are valid direction options!";
+					cerr << "Only 'x', 'y', and 'z'"
+					"are valid direction options!";
 					break;
+			case 'h':
+				Auxfunc::displayHelpMessage;
+				exit(0);
+				break;
 			case '?':
 				// Error message in case of an unknown argument
-				cerr << endl 
-					<< "Encountered unknown argument!" << endl << endl
-					<< "Usage: counter -option argument inputfile outputfile"
-					<< endl << "(More than one option can be given!)" << endl
-					<< endl << "Options:" << endl 					
-					<< " -u: [U]ser-given lis of layers"
-					<< " (mutually exclusive with -a!)." << endl
-					<< "     Argument of type String expected, in the form of:"
-					<< " \"l1b1,l1b2;l2b1,l2b2;l3b1,l3b2;...\"" << endl
-					<< "     l1b1 = layer 1 border 1,"
-					<< " l1b2 = layer 1 border 2; etc..." << endl <<endl
-					<< " -a: [A]utomatic generation of layers"
-					<< " (mutually exclusive with -u!)." << endl
-					<< "     Argument of type int expected," 
-					<< " giving the number of desired layers." << endl
-					<< "     The layers are automatically spread" 
-					<< " evenly across the sample." << endl << endl 
-					<< " -d: [D]irection in which the spheres"
-					<< " are to be counted:" << endl 
-					<< "     Argument of type char expected. Default is 'z'!" 
-					<< endl
-					<< "     Valid options: 'x', 'y', and 'z' for the"
-					<< "respective directions.";
+
 				exit(0);
 		}
 	}
@@ -155,21 +147,26 @@ int main(int argc, char* argv[]) {
 	
 	ifstream infile(infiledirectory);
 	
-	//Error message if inputfile cannot be opened
-	if (!infile.is_open()) {
+	// Error message if inputfile cannot be opened
+	if (!infile.is_open()) 
+	{
 		cout << "Inputfile could not be opened." << endl;
 		cout << "Usage: counter -options inputfile outputfile" << endl;
 		exit(0);
+	} else {
+		cout << "Successfully opened inputfile '" << infiledirectory << "'.";
 	}
 		
-	//Skip inputfile until the number of spheres is reached
+	// Skip inputfile until the number of spheres is reached
 	string currentline = "abc";
 	while (currentline != "ITEM: NUMBER OF ATOMS") getline(infile, currentline);
 	int numberofspheres = 0;		
-	infile >> numberofspheres;			//Read the number of spheres
-	//Read the borders of the test setup out of the input file
-	getline(infile, currentline);		//Skip a line
-	getline(infile, currentline);		//Skip a line
+	infile >> numberofspheres;			// Read the number of spheres
+	cout << "Inputfile specified " << numberofspheres << " spheres."
+		<< endl << endl;
+	// Read the borders of the test setup out of the input file
+	getline(infile, currentline);		// Skip a line
+	getline(infile, currentline);		// Skip a line
 	
 	double x1, x2;
 	infile >> x1;
@@ -182,7 +179,7 @@ int main(int argc, char* argv[]) {
 	infile >> z2;
 	Container mainContainer(x1, x2, y1, y2, z1, z2);
 	
-	//Skip inputfile until listing of sphere characteristics
+	// Skip inputfile until listing of sphere characteristics
 	while (currentline != 
 		"ITEM: ATOMS id type x y z ix iy iz vx vy vz fx fy fz omegax omegay omegaz radius c_contact ") 
 	  getline(infile, currentline);
@@ -191,8 +188,9 @@ int main(int argc, char* argv[]) {
 	int id;
 	double x, y, z, radius;
 	Sphere currentsphere;
-	//Read the spheres and save tham in the spheres[] array
-	for (int i = 0; i < numberofspheres; i++){
+	// Read the spheres and save tham in the spheres[] array
+	for (int i = 0; i < numberofspheres; i++)
+	{
 		infile >> id;
 		infile >> trash;
 		infile >> x;
@@ -216,7 +214,7 @@ int main(int argc, char* argv[]) {
 		mainContainer.addSphere(currentsphere);
 	}
 	
-	//Close inputfile
+	// Close inputfile
 	infile.close();
 	
 	
@@ -228,61 +226,70 @@ int main(int argc, char* argv[]) {
 	
 	int numberoflayers = 0;
 	
-	//User defined layers, count the number of tokens of the option argument
-	if (uflag == 1) {
+	// User defined layers, count the number of tokens of the option argument
+	if (uflag == 1) 
+	{
 		//Transform the argument of option -l to a stringstream
 		stringstream countstream(uarg);
 		string layerlisttoken;
 		
-		//Count how many times countstream is divided by a ';'
-		while (getline(countstream, layerlisttoken, ';')) {
+		// Count how many times countstream is divided by the character '-'
+		while (getline(countstream, layerlisttoken, '-')) 
+		{
 			numberoflayers++;
 		}
 	}
 	
-	//Automatic layer definition, set numberoflayers to the option argument
-	if (aflag == 1) {
+	// Automatic layer definition, set numberoflayers to the option argument
+	if (aflag == 1) 
+	{
 		numberoflayers = aarg;
 	}
 	
-	//Set the direction of the layers
-	//Layer layers[numberoflayers];
+	// Set the direction of the layers
+	// Layer layers[numberoflayers];
 	
 	/* Define the layers ---------------------------------------------------- */
 
-	//Option -u: User defined layers
-	if (uflag == 1) {
+	// Option -u: User defined layers
+	if (uflag == 1) 
+	{
 		
 		double border[2];
 		stringstream layerliststream(uarg);
 		string layerlisttoken;
 		int count = 0;
 		
-		while (getline(layerliststream, layerlisttoken, ';')) {
+		while (getline(layerliststream, layerlisttoken, '-')) 
+		{
 			
 			stringstream singlelayerstream(layerlisttoken);
 			string singlelayertoken;
-			for(int i = 0; i < 2; i++) {
+			for(int i = 0; i < 2; i++) 
+			{
 				
-				if (getline(singlelayerstream, singlelayertoken, ',')) {
+				if (getline(singlelayerstream, singlelayertoken, ',')) 
+				{
 					const char * c = singlelayertoken.c_str();
 					char * e;
 					border[i] = strtod(c, &e);
-					if (*e != '\0' || errno != 0 ) { 
-						//String wurde nicht komplett ausgelesen 
-						//bzw. overflow oder underflow fehlermeldung
+					if (*e != '\0' || errno != 0 ) 
+					{ 
+						// String wurde nicht komplett ausgelesen 
+						// bzw. overflow oder underflow fehlermeldung
 						cerr << endl 
 							<< "The argument for option -l could not be read."
 							<< endl
 							<< "Option -l expects argument of type string "
-							<< "\"l1b1,l1b2;l2b1,l2b2;..\"" 
+							<< "\"l1b1,l1b2-l2b1,l2b2;..\"" 
 							<< endl
 							<< "Where: l1b1 = layer 1 border 1," 
 							<< "l1b2 = layer 1 border 2; etc..." 
 							<< endl;
 						exit (0);
 					}
-				} else {
+				} else 
+				{
 					cerr << "Faulty formating of the argument of -l:\n";
 					cerr << uarg << endl;
 					exit (0);
@@ -291,23 +298,35 @@ int main(int argc, char* argv[]) {
 			Layer currentlayer(border[0], border[1], direction);
 			mainContainer.addLayer(currentlayer);
 			count++;
+			cout << "Created user-defined layer " << count << "."
+				<< " Bottom border: " << currentlayer.getBottom()
+				<< ", top border: " << currentlayer.getTop() 
+				<< endl ;
 		}
+		cout << endl;
 	}
 	
 	// Option -a: automatically generated layers
-	if (aflag == 1) {
+	if (aflag == 1) 
+	{
 		double top = mainContainer.getTop(direction);
 		double bottom = mainContainer.getBottom(direction);
 		double totalheight = top - bottom;
 		double heightoflayer = totalheight / numberoflayers;
-		cout << endl;
-		for (int i = 0; i < numberoflayers; i++){
+		for (int i = 0; i < numberoflayers; i++)
+		{
 			Layer currentlayer(bottom+i*heightoflayer, 
 							   bottom+(i+1)*heightoflayer, direction);
 			mainContainer.addLayer(currentlayer);
+			cout << "Created automatically-defined layer " << i+1 << "."
+				<< " Bottom border: " << currentlayer.getBottom()
+				<< ", top border: " << currentlayer.getTop() 
+				<< endl;
 		}
+		cout << endl;
 	}
 	
+	mainContainer.createInfoVectors();
 	mainContainer.writeOutputFile(outfiledirectory);
 
 	return 0;
