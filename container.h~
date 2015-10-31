@@ -28,12 +28,9 @@ private:
     char m_boundy;    // Boundary condition in y
     char m_boundz;    // Boundary condition in z
     // Wrap treatment is set to [i]gnore by default
-    char m_wraptreatment = 'n'; 
+    char m_wraptreatment = 'i'; 
     // A vector to hold all spheres of the experiment
     std::vector<Sphere> spheres;
-    std::vector<Sphere> spheresx;
-    std::vector<Sphere> spheresy;
-    std::vector<Sphere> spheresz;
     // A vector to hold all layers of the experiment
     std::vector<Layer> layers;
     // A vector that will hold all unique radii of the spheres
@@ -58,9 +55,9 @@ public:
     // A method to set the wrap treatment option
     void setWraptreatment(char wraptreatment);
     // A method to return the boundary condition of a given direction.
-    void prepareWrap(int numberOfExtraLayers, double layersize);
+    void prepareWrap(double maxRadius);
     // A method to prepare the layers vector for extra-layer overlap treatment
-    void createInfoVectors(bool routput);
+    void createInfoVectors();
     // A method to count Spheres and create the info Arrays inside of all
     // spheres and layer
     void writeOutputFile(char* outputFileName, char* infiledirectory, char outputOption);

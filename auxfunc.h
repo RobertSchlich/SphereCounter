@@ -7,9 +7,9 @@ class Auxfunc
 {
 private:
 public:
-	static bool compare (double i, double j);
-	static void displayHelpMessage();
-	static void unknownOptionMessage();
+    static bool compare (double i, double j);
+    static void displayHelpMessage();
+    static void unknownOptionMessage();
 };
 
 #endif
